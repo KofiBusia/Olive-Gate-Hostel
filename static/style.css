@@ -185,6 +185,17 @@ body {
   box-shadow: 0 12px 30px rgba(24, 39, 32, 0.16);
 }
 
+.admin-login-link {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.admin-login-link:hover {
+  color: var(--olive-primary);
+}
+
 .card {
   border: 1px solid var(--border-soft);
   border-radius: 0.6rem;

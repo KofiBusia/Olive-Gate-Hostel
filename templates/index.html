@@ -107,4 +107,8 @@
     <p class="text-muted fs-6">Unexpected costs happen. Apply for a loan of up to GHc {{ '%.0f'|format(max_amount) }} in a few clicks, with a clear, flat {{ rate_pct }}% interest rate and no hidden fees.</p>
   </div>
 </div>
+
+<div class="text-center py-4 border-top">
+  <a href="{{ url_for('login') }}" class="admin-login-link"><i class="bi bi-shield-lock"></i> Admin Login</a>
+</div>
 {% endblock %}
