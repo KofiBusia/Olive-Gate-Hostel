@@ -7,8 +7,11 @@
   <div class="col-6 col-md-3">
     <div class="card shadow-sm">
       <div class="card-body">
-        <h6 class="text-muted">Registered Students</h6>
-        <p class="fs-4 mb-0">{{ total_student_count }}</p>
+        <h6 class="text-muted">Room Applications</h6>
+        <p class="fs-4 mb-0">
+          {{ occupied_beds }} / {{ total_beds }}
+          {% if beds_available <= 0 %}<span class="badge status-rejected">Full</span>{% endif %}
+        </p>
       </div>
     </div>
   </div>

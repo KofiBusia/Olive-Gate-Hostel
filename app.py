@@ -20,7 +20,16 @@ from forms import (
     ProfileForm,
     RegisterForm,
 )
-from models import ACTIVE_LOAN_STATUSES, LOAN_INTEREST_RATE, MAX_LOAN_AMOUNT, REPAYMENT_PERIOD_DAYS, Loan, User
+from models import (
+    ACTIVE_LOAN_STATUSES,
+    ADMIN_EMAILS,
+    LOAN_INTEREST_RATE,
+    MAX_LOAN_AMOUNT,
+    REPAYMENT_PERIOD_DAYS,
+    TOTAL_BEDS,
+    Loan,
+    User,
+)
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
@@ -85,7 +94,20 @@ def admin_required(f):
 
 @app.route("/")
 def index():
-    return render_template("index.html")
+    occupied_beds, beds_available = _bed_stats()
+    return render_template(
+        "index.html",
+        max_amount=MAX_LOAN_AMOUNT,
+        rate_pct=int(LOAN_INTEREST_RATE * 100),
+        repayment_days=REPAYMENT_PERIOD_DAYS,
+        beds_available=beds_available,
+        total_beds=TOTAL_BEDS,
+    )
+
+
+def _bed_stats():
+    occupied = User.query.filter_by(role="student").count()
+    return occupied, max(TOTAL_BEDS - occupied, 0)
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -94,35 +116,57 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for("dashboard"))
     form = RegisterForm()
+    occupied_beds, beds_available = _bed_stats()
+
     if form.validate_on_submit():
         email = form.email.data.lower().strip()
+        is_admin_signup = email in ADMIN_EMAILS
+
         if User.query.filter_by(email=email).first():
             flash("An account with that email already exists.", "danger")
-            return render_template("register.html", form=form)
+            return render_template("register.html", form=form, beds_available=beds_available, total_beds=TOTAL_BEDS)
+
+        if not is_admin_signup and beds_available <= 0:
+            flash("Sorry, all 12 beds are currently full. Registration is closed for now.", "danger")
+            return render_template("register.html", form=form, beds_available=0, total_beds=TOTAL_BEDS)
+
         user = User(
             full_name=form.full_name.data.strip(),
             email=email,
             phone=form.phone.data.strip(),
             program=form.program.data.strip(),
             room_number=form.room_number.data.strip(),
-            role="student",
+            role="admin" if is_admin_signup else "student",
         )
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        notify(
-            "New Student Registration - Olive Gate Hostel",
-            "A new student has registered at Olive Gate Hostel.\n\n"
-            f"Name: {user.full_name}\n"
-            f"Email: {user.email}\n"
-            f"Phone: {user.phone}\n"
-            f"Program: {user.program}\n"
-            f"Room Number: {user.room_number or 'Not specified'}\n"
-            f"Registered On: {user.date_registered.strftime('%d %b %Y, %I:%M %p')}\n",
-        )
-        flash("Registration successful. Please log in.", "success")
+
+        if is_admin_signup:
+            notify(
+                "New Admin Account Created - Olive Gate Hostel",
+                "An admin account was just created at Olive Gate Hostel.\n\n"
+                f"Name: {user.full_name}\n"
+                f"Email: {user.email}\n"
+                f"Created On: {user.date_registered.strftime('%d %b %Y, %I:%M %p')}\n",
+            )
+            flash("Admin account created. Please log in.", "success")
+        else:
+            notify(
+                "New Room Application - Olive Gate Hostel",
+                "A new student has applied for a room at Olive Gate Hostel.\n\n"
+                f"Name: {user.full_name}\n"
+                f"Email: {user.email}\n"
+                f"Phone: {user.phone}\n"
+                f"Program: {user.program}\n"
+                f"Room Number: {user.room_number or 'Not specified'}\n"
+                f"Registered On: {user.date_registered.strftime('%d %b %Y, %I:%M %p')}\n"
+                f"Beds Occupied Now: {occupied_beds + 1} / {TOTAL_BEDS}\n",
+            )
+            flash("Registration successful. Please log in.", "success")
         return redirect(url_for("login"))
-    return render_template("register.html", form=form)
+
+    return render_template("register.html", form=form, beds_available=beds_available, total_beds=TOTAL_BEDS)
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -195,7 +239,7 @@ def apply_loan():
             f"Email: {current_user.email}\n"
             f"Phone: {current_user.phone}\n"
             f"Amount Requested: GHc {loan.amount:.2f}\n"
-            f"Interest (25%): GHc {loan.interest_amount:.2f}\n"
+            f"Interest ({int(loan.interest_rate * 100)}%): GHc {loan.interest_amount:.2f}\n"
             f"Total Repayable: GHc {loan.total_repayable:.2f}\n"
             f"Purpose: {loan.purpose}\n"
             f"Applied On: {loan.date_applied.strftime('%d %b %Y, %I:%M %p')}\n",
@@ -261,6 +305,7 @@ def admin_dashboard():
     pending_count = sum(1 for loan in all_loans if loan.status == "pending")
     total_lent = sum(loan.amount for loan in all_loans if loan.status in ("approved", "repaid"))
     outstanding_balance = sum(loan.total_repayable for loan in all_loans if loan.status == "approved")
+    occupied_beds, beds_available = _bed_stats()
 
     return render_template(
         "admin_dashboard.html",
@@ -271,7 +316,10 @@ def admin_dashboard():
         outstanding_balance=outstanding_balance,
         student_query=student_query,
         loan_status_filter=loan_status_filter,
-        total_student_count=User.query.filter_by(role="student").count(),
+        total_student_count=occupied_beds,
+        occupied_beds=occupied_beds,
+        beds_available=beds_available,
+        total_beds=TOTAL_BEDS,
     )
 
 

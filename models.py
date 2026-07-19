@@ -6,9 +6,12 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from extensions import db
 
 MAX_LOAN_AMOUNT = 500.0
-LOAN_INTEREST_RATE = 0.25  # flat 25% one-time interest
+LOAN_INTEREST_RATE = 0.20  # flat 20% one-time interest
 REPAYMENT_PERIOD_DAYS = 30
 ACTIVE_LOAN_STATUSES = ("pending", "approved")
+
+TOTAL_BEDS = 12
+ADMIN_EMAILS = frozenset({"kyeikofi@gmail.com", "fkyei4life@gmail.com"})
 
 
 class User(db.Model, UserMixin):

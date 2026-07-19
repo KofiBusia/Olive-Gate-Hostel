@@ -19,22 +19,33 @@
         {% endif %}
 
         <div class="hero-stats row g-3 mt-4">
-          <div class="col-4">
+          <div class="col-6 col-md-3">
             <div class="hero-stat-chip">
-              <div class="hero-stat-value">GHc 500</div>
+              <div class="hero-stat-value">GHc {{ '%.0f'|format(max_amount) }}</div>
               <div class="hero-stat-label">Max Loan</div>
             </div>
           </div>
-          <div class="col-4">
+          <div class="col-6 col-md-3">
             <div class="hero-stat-chip">
-              <div class="hero-stat-value">25%</div>
+              <div class="hero-stat-value">{{ rate_pct }}%</div>
               <div class="hero-stat-label">Flat Interest</div>
             </div>
           </div>
-          <div class="col-4">
+          <div class="col-6 col-md-3">
             <div class="hero-stat-chip">
-              <div class="hero-stat-value">30 days</div>
+              <div class="hero-stat-value">{{ repayment_days }} days</div>
               <div class="hero-stat-label">Repayment Term</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="hero-stat-chip">
+              {% if beds_available > 0 %}
+                <div class="hero-stat-value">{{ beds_available }} / {{ total_beds }}</div>
+                <div class="hero-stat-label">Beds Available</div>
+              {% else %}
+                <div class="hero-stat-value">Full</div>
+                <div class="hero-stat-label">All {{ total_beds }} Beds Taken</div>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -60,7 +71,7 @@
       <div class="card-body">
         <div class="feature-icon"><i class="bi bi-cash-coin"></i></div>
         <h5 class="card-title">Loan Applications</h5>
-        <p class="card-text">Apply for a loan of up to GHc 500 with a flat 25% interest rate, right from your dashboard.</p>
+        <p class="card-text">Apply for a loan of up to GHc {{ '%.0f'|format(max_amount) }} with a flat {{ rate_pct }}% interest rate, right from your dashboard.</p>
       </div>
     </div>
   </div>
@@ -93,7 +104,7 @@
   <div class="col-md-6">
     <span class="section-eyebrow">Support</span>
     <h3 class="mb-3">Financial support when you need it</h3>
-    <p class="text-muted fs-6">Unexpected costs happen. Apply for a loan of up to GHc 500 in a few clicks, with a clear, flat 25% interest rate and no hidden fees.</p>
+    <p class="text-muted fs-6">Unexpected costs happen. Apply for a loan of up to GHc {{ '%.0f'|format(max_amount) }} in a few clicks, with a clear, flat {{ rate_pct }}% interest rate and no hidden fees.</p>
   </div>
 </div>
 {% endblock %}
