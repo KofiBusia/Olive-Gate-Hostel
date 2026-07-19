@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}My Profile - Olive Gate Hostel{% endblock %}
+{% block content %}
+<div class="row justify-content-center g-4">
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="mb-1">My Profile</h3>
+        <p class="text-muted">{{ current_user.email }}</p>
+        <form method="POST" novalidate>
+          {{ profile_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ profile_form.full_name.label(class="form-label") }}
+            {{ profile_form.full_name(class="form-control" + (" is-invalid" if profile_form.full_name.errors else "")) }}
+            {% for error in profile_form.full_name.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ profile_form.phone.label(class="form-label") }}
+            {{ profile_form.phone(class="form-control" + (" is-invalid" if profile_form.phone.errors else "")) }}
+            {% for error in profile_form.phone.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ profile_form.program.label(class="form-label") }}
+            {{ profile_form.program(class="form-control" + (" is-invalid" if profile_form.program.errors else "")) }}
+            {% for error in profile_form.program.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ profile_form.room_number.label(class="form-label") }}
+            {{ profile_form.room_number(class="form-control" + (" is-invalid" if profile_form.room_number.errors else "")) }}
+            {% for error in profile_form.room_number.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          {{ profile_form.submit(class="btn olive-btn") }}
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="mb-3">Change Password</h3>
+        <form method="POST" novalidate>
+          {{ password_form.hidden_tag() }}
+          <div class="mb-3">
+            {{ password_form.current_password.label(class="form-label") }}
+            {{ password_form.current_password(class="form-control" + (" is-invalid" if password_form.current_password.errors else "")) }}
+            {% for error in password_form.current_password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ password_form.new_password.label(class="form-label") }}
+            {{ password_form.new_password(class="form-control" + (" is-invalid" if password_form.new_password.errors else "")) }}
+            {% for error in password_form.new_password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ password_form.confirm_new_password.label(class="form-label") }}
+            {{ password_form.confirm_new_password(class="form-control" + (" is-invalid" if password_form.confirm_new_password.errors else "")) }}
+            {% for error in password_form.confirm_new_password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          {{ password_form.submit(class="btn btn-outline-secondary") }}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Olive Gate Hostel{% endblock %}
+
+{% block hero %}
+<section class="hero-banner">
+  <div class="hero-blob-gold"></div>
+  <div class="hero-blob-green"></div>
+  <div class="container hero-inner">
+    <div class="row align-items-center">
+      <div class="col-lg-8">
+        <span class="hero-eyebrow">Home away from home</span>
+        <h1 class="display-4 fw-bold mb-3">Welcome to Olive Gate Hostel</h1>
+        <p class="fs-5 mb-4 hero-lede">Register for accommodation and apply for a student loan right from your dashboard — a simple, friendly way to manage your stay.</p>
+        {% if not current_user.is_authenticated %}
+          <a href="{{ url_for('register') }}" class="btn btn-lg olive-btn me-2">Register Now</a>
+          <a href="{{ url_for('login') }}" class="btn btn-lg btn-hero-outline">Login</a>
+        {% else %}
+          <a href="{{ url_for('dashboard') if not current_user.is_admin else url_for('admin_dashboard') }}" class="btn btn-lg olive-btn">Go to Dashboard</a>
+        {% endif %}
+
+        <div class="hero-stats row g-3 mt-4">
+          <div class="col-4">
+            <div class="hero-stat-chip">
+              <div class="hero-stat-value">GHc 500</div>
+              <div class="hero-stat-label">Max Loan</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="hero-stat-chip">
+              <div class="hero-stat-value">25%</div>
+              <div class="hero-stat-label">Flat Interest</div>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="hero-stat-chip">
+              <div class="hero-stat-value">30 days</div>
+              <div class="hero-stat-label">Repayment Term</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4 mb-5">
+  <div class="col-md-4">
+    <div class="card feature-card h-100 shadow-sm">
+      <div class="card-body">
+        <div class="feature-icon"><i class="bi bi-person-plus-fill"></i></div>
+        <h5 class="card-title">Student Registration</h5>
+        <p class="card-text">Sign up with your details and secure your spot at the hostel in minutes.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card feature-card h-100 shadow-sm">
+      <div class="card-body">
+        <div class="feature-icon"><i class="bi bi-cash-coin"></i></div>
+        <h5 class="card-title">Loan Applications</h5>
+        <p class="card-text">Apply for a loan of up to GHc 500 with a flat 25% interest rate, right from your dashboard.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card feature-card h-100 shadow-sm">
+      <div class="card-body">
+        <div class="feature-icon"><i class="bi bi-graph-up-arrow"></i></div>
+        <h5 class="card-title">Track Your Status</h5>
+        <p class="card-text">Follow the progress of your loan applications from pending to approved and repaid.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row align-items-center g-4 mb-5 life-section">
+  <div class="col-md-6">
+    <img src="{{ url_for('static', filename='img/students-library.jpg') }}" alt="Students studying together" class="img-fluid life-photo">
+  </div>
+  <div class="col-md-6">
+    <span class="section-eyebrow">Community</span>
+    <h3 class="mb-3">A place to study, connect, and thrive</h3>
+    <p class="text-muted fs-6">Olive Gate isn't just a room — it's a community. Study together, share ideas, and build friendships that last well beyond your program.</p>
+  </div>
+</div>
+
+<div class="row align-items-center g-4 mb-4 life-section flex-md-row-reverse">
+  <div class="col-md-6">
+    <img src="{{ url_for('static', filename='img/students-collab.jpg') }}" alt="Students collaborating" class="img-fluid life-photo">
+  </div>
+  <div class="col-md-6">
+    <span class="section-eyebrow">Support</span>
+    <h3 class="mb-3">Financial support when you need it</h3>
+    <p class="text-muted fs-6">Unexpected costs happen. Apply for a loan of up to GHc 500 in a few clicks, with a clear, flat 25% interest rate and no hidden fees.</p>
+  </div>
+</div>
+{% endblock %}

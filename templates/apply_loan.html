@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Apply for Loan - Olive Gate Hostel{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="mb-1">Apply for a Loan</h3>
+        <p class="text-muted">Maximum amount: GHc {{ '%.0f'|format(max_amount) }} &middot; Flat interest rate: {{ rate_pct }}% &middot; Repayment term: {{ repayment_days }} days from approval</p>
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            {{ form.amount.label(class="form-label") }}
+            {{ form.amount(class="form-control" + (" is-invalid" if form.amount.errors else ""), id="amount", step="0.01", min="1", max=max_amount) }}
+            {% for error in form.amount.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="mb-3">
+            {{ form.purpose.label(class="form-label") }}
+            {{ form.purpose(class="form-control" + (" is-invalid" if form.purpose.errors else ""), rows="3") }}
+            {% for error in form.purpose.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          <div class="alert alert-secondary">
+            <div>Interest ({{ rate_pct }}%): <strong><span id="interestPreview">0.00</span> GHc</strong></div>
+            <div>Total Repayable: <strong><span id="totalPreview">0.00</span> GHc</strong></div>
+          </div>
+          {{ form.submit(class="btn olive-btn w-100") }}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const amountInput = document.getElementById('amount');
+  const interestPreview = document.getElementById('interestPreview');
+  const totalPreview = document.getElementById('totalPreview');
+  const rate = {{ rate_pct }} / 100;
+
+  function updatePreview() {
+    const amount = parseFloat(amountInput.value) || 0;
+    const interest = amount * rate;
+    interestPreview.textContent = interest.toFixed(2);
+    totalPreview.textContent = (amount + interest).toFixed(2);
+  }
+
+  amountInput.addEventListener('input', updatePreview);
+  updatePreview();
+</script>
+{% endblock %}

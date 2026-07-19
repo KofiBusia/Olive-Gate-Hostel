@@ -1,0 +1,345 @@
+:root {
+  --olive-primary: #1b4332;
+  --olive-primary-dark: #12301f;
+  --olive-primary-light: #2d6a4f;
+  --gold-accent: #b8902e;
+  --gold-accent-dark: #9a7524;
+  --surface: #ffffff;
+  --page-bg: #f6f7f5;
+  --text-body: #24312b;
+  --text-muted: #5c6b63;
+  --border-soft: #e3e7e2;
+
+  --status-pending: #b8902e;
+  --status-approved: #2d6a4f;
+  --status-rejected: #a8433a;
+  --status-repaid: #34618e;
+  --status-overdue: #6f1d1b;
+}
+
+body {
+  background-color: var(--page-bg);
+  background-image: radial-gradient(circle, rgba(27, 67, 50, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--text-body);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.bg-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: -1;
+  animation: float-blob 14s ease-in-out infinite;
+}
+
+.blob-a {
+  width: 420px;
+  height: 420px;
+  top: -140px;
+  right: -120px;
+  background: radial-gradient(circle, rgba(184, 144, 46, 0.5), transparent 70%);
+}
+
+.blob-b {
+  width: 480px;
+  height: 480px;
+  bottom: -180px;
+  left: -160px;
+  background: radial-gradient(circle, rgba(45, 106, 79, 0.45), transparent 70%);
+  animation-delay: -7s;
+}
+
+@keyframes float-blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -30px) scale(1.06); }
+}
+
+.navbar {
+  background-color: var(--olive-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.navbar-brand {
+  letter-spacing: 0.01em;
+}
+
+.brand-mark {
+  color: var(--gold-accent);
+}
+
+.nav-link {
+  font-weight: 500;
+}
+
+.hero-banner {
+  position: relative;
+  background-image: linear-gradient(115deg, rgba(18, 48, 31, 0.88) 0%, rgba(27, 67, 50, 0.72) 42%, rgba(45, 106, 79, 0.38) 100%),
+    url("img/hero-students.jpg");
+  background-size: cover;
+  background-position: center 78%;
+  color: #f4f6f4;
+  padding: 6.5rem 0 5rem;
+  min-height: 560px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.hero-blob-gold,
+.hero-blob-green {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.hero-blob-gold {
+  width: 320px;
+  height: 320px;
+  top: -80px;
+  right: 8%;
+  background: rgba(184, 144, 46, 0.45);
+  animation: float-blob 12s ease-in-out infinite;
+}
+
+.hero-blob-green {
+  width: 260px;
+  height: 260px;
+  bottom: -100px;
+  left: 4%;
+  background: rgba(45, 106, 79, 0.5);
+  animation: float-blob 16s ease-in-out infinite reverse;
+}
+
+.hero-eyebrow {
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gold-accent);
+  margin-bottom: 0.75rem;
+}
+
+.hero-banner h1 {
+  color: #fff;
+}
+
+.hero-lede {
+  color: #dfe6e1;
+  max-width: 34rem;
+}
+
+.btn-hero-outline {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  color: #fff;
+  font-weight: 500;
+}
+
+.btn-hero-outline:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: #fff;
+  color: #fff;
+}
+
+.hero-stat-chip {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(6px);
+  border-radius: 0.6rem;
+  padding: 0.85rem 0.5rem;
+  text-align: center;
+}
+
+.hero-stat-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold-accent);
+}
+
+.hero-stat-label {
+  font-size: 0.78rem;
+  color: #dfe6e1;
+  margin-top: 0.15rem;
+}
+
+.section-eyebrow {
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gold-accent-dark);
+  margin-bottom: 0.5rem;
+}
+
+.life-photo {
+  border-radius: 0.9rem;
+  box-shadow: 0 12px 30px rgba(24, 39, 32, 0.16);
+}
+
+.card {
+  border: 1px solid var(--border-soft);
+  border-radius: 0.6rem;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.card.shadow-sm {
+  box-shadow: 0 2px 10px rgba(24, 39, 32, 0.06) !important;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 24px rgba(24, 39, 32, 0.12) !important;
+}
+
+.feature-icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6rem;
+  background: linear-gradient(135deg, var(--olive-primary), var(--olive-primary-light));
+  color: #fff;
+  font-size: 1.3rem;
+  margin-bottom: 0.9rem;
+}
+
+.card-title {
+  color: var(--olive-primary);
+  font-weight: 600;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--olive-primary-dark);
+  font-weight: 600;
+}
+
+a {
+  color: var(--olive-primary-light);
+}
+
+a:hover {
+  color: var(--gold-accent-dark);
+}
+
+.olive-btn {
+  background-color: var(--olive-primary);
+  border-color: var(--olive-primary);
+  color: #fff;
+  font-weight: 500;
+}
+
+.olive-btn:hover,
+.olive-btn:focus {
+  background-color: var(--olive-primary-dark);
+  border-color: var(--olive-primary-dark);
+  color: #fff;
+}
+
+.olive-btn:disabled {
+  background-color: #8a9891;
+  border-color: #8a9891;
+}
+
+.btn-outline-secondary {
+  color: var(--olive-primary);
+  border-color: var(--olive-primary);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--olive-primary);
+  border-color: var(--olive-primary);
+  color: #fff;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--olive-primary-light);
+  box-shadow: 0 0 0 0.2rem rgba(45, 106, 79, 0.18);
+}
+
+.table thead th {
+  --bs-table-bg: var(--olive-primary);
+  --bs-table-color: #fff;
+  background-color: var(--olive-primary);
+  color: #fff;
+  font-weight: 600;
+  border: none;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  --bs-table-accent-bg: #f1f4f1;
+  background-color: #f1f4f1;
+}
+
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.badge.status-pending {
+  background-color: var(--status-pending);
+}
+
+.badge.status-approved {
+  background-color: var(--status-approved);
+}
+
+.badge.status-rejected {
+  background-color: var(--status-rejected);
+}
+
+.badge.status-repaid {
+  background-color: var(--status-repaid);
+}
+
+.badge.status-overdue {
+  background-color: var(--status-overdue);
+}
+
+.alert-success {
+  background-color: #e6f2ea;
+  border-color: #bfe0cc;
+  color: #1b4332;
+}
+
+.alert-warning {
+  background-color: #fbf1dc;
+  border-color: #eeddab;
+  color: #7a5c12;
+}
+
+.alert-danger {
+  background-color: #f8e6e4;
+  border-color: #edc4be;
+  color: #7a2a22;
+}
+
+.btn {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.olive-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(27, 67, 50, 0.25);
+}
+
+@media (max-width: 767px) {
+  .hero-banner {
+    padding: 4rem 0 3rem;
+    background-position: center 20%;
+  }
+}
