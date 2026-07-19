@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Checkout Payment - Olive Gate Hostel{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7">
+    <div class="card shadow-sm">
+      <div class="card-body p-4">
+        <h3 class="mb-1">Checkout Payment</h3>
+        <p class="text-muted mb-3">Once your stay is complete, pay the checkout fee via Mobile Money, then submit your transaction reference below for admin approval.</p>
+        <div class="alert alert-secondary">
+          <div>Amount to Pay: <strong>GHc {{ '%.2f'|format(amount) }}</strong></div>
+          <div>Mobile Money Number: <strong>{{ payment_number }}</strong></div>
+        </div>
+        <form method="POST" novalidate>
+          {{ form.hidden_tag() }}
+          <div class="mb-3">
+            {{ form.transaction_reference.label(class="form-label") }}
+            {{ form.transaction_reference(class="form-control" + (" is-invalid" if form.transaction_reference.errors else ""), placeholder="e.g. MoMo transaction ID") }}
+            {% for error in form.transaction_reference.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+          </div>
+          {{ form.submit(class="btn olive-btn w-100") }}
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

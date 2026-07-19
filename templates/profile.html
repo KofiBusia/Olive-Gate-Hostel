@@ -47,7 +47,7 @@
           </div>
           <div class="mb-3">
             {{ password_form.new_password.label(class="form-label") }}
-            {{ password_form.new_password(class="form-control" + (" is-invalid" if password_form.new_password.errors else "")) }}
+            {{ password_form.new_password(class="form-control pw-strength-input" + (" is-invalid" if password_form.new_password.errors else "")) }}
             {% for error in password_form.new_password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
           </div>
           <div class="mb-3">

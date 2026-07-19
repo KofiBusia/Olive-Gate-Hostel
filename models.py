@@ -13,6 +13,10 @@ ACTIVE_LOAN_STATUSES = ("pending", "approved")
 TOTAL_BEDS = 12
 ADMIN_EMAILS = frozenset({"kyeikofi@gmail.com", "fkyei4life@gmail.com"})
 
+CHECKOUT_PAYMENT_AMOUNT = 1500.0
+PAYMENT_MOMO_NUMBER = "0503566913"
+PAYMENT_ACTIVE_STATUSES = ("pending", "approved")
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -21,11 +25,14 @@ class User(db.Model, UserMixin):
     phone = db.Column(db.String(20))
     program = db.Column(db.String(120))
     room_number = db.Column(db.String(20))
+    check_in_date = db.Column(db.Date)
+    check_out_date = db.Column(db.Date)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default="student")
     date_registered = db.Column(db.DateTime, default=datetime.utcnow)
 
     loans = db.relationship("Loan", backref="student", lazy=True, cascade="all, delete-orphan")
+    payments = db.relationship("Payment", backref="student", lazy=True, cascade="all, delete-orphan")
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -36,6 +43,10 @@ class User(db.Model, UserMixin):
     @property
     def is_admin(self):
         return self.role == "admin"
+
+    @property
+    def stay_complete(self):
+        return self.check_out_date is not None and datetime.utcnow().date() >= self.check_out_date
 
 
 class Loan(db.Model):
@@ -71,3 +82,13 @@ class Loan(db.Model):
         self.status = "approved"
         self.date_decided = datetime.utcnow()
         self.due_date = datetime.utcnow() + timedelta(days=REPAYMENT_PERIOD_DAYS)
+
+
+class Payment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    amount = db.Column(db.Float, nullable=False, default=CHECKOUT_PAYMENT_AMOUNT)
+    transaction_reference = db.Column(db.String(120))
+    status = db.Column(db.String(20), nullable=False, default="pending")
+    date_submitted = db.Column(db.DateTime, default=datetime.utcnow)
+    date_decided = db.Column(db.DateTime)

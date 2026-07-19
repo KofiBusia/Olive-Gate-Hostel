@@ -38,9 +38,21 @@
             {{ form.room_number(class="form-control" + (" is-invalid" if form.room_number.errors else "")) }}
             {% for error in form.room_number.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
           </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              {{ form.check_in_date.label(class="form-label") }}
+              {{ form.check_in_date(class="form-control" + (" is-invalid" if form.check_in_date.errors else "")) }}
+              {% for error in form.check_in_date.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6 mb-3">
+              {{ form.check_out_date.label(class="form-label") }}
+              {{ form.check_out_date(class="form-control" + (" is-invalid" if form.check_out_date.errors else "")) }}
+              {% for error in form.check_out_date.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
+            </div>
+          </div>
           <div class="mb-3">
             {{ form.password.label(class="form-label") }}
-            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+            {{ form.password(class="form-control pw-strength-input" + (" is-invalid" if form.password.errors else "")) }}
             {% for error in form.password.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}
           </div>
           <div class="mb-3">

@@ -10,25 +10,34 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 from flask_mail import Mail, Message
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
+from sqlalchemy import inspect, text
 
 from extensions import db
 from forms import (
     AdminAccessForm,
     AdminStudentEditForm,
     ChangePasswordForm,
+    ForgotPasswordForm,
     LoanForm,
     LoginForm,
+    PaymentForm,
     ProfileForm,
     RegisterForm,
+    ResetPasswordForm,
 )
 from models import (
     ACTIVE_LOAN_STATUSES,
     ADMIN_EMAILS,
+    CHECKOUT_PAYMENT_AMOUNT,
     LOAN_INTEREST_RATE,
     MAX_LOAN_AMOUNT,
+    PAYMENT_ACTIVE_STATUSES,
+    PAYMENT_MOMO_NUMBER,
     REPAYMENT_PERIOD_DAYS,
     TOTAL_BEDS,
     Loan,
+    Payment,
     User,
 )
 
@@ -62,8 +71,8 @@ limiter = Limiter(get_remote_address, app=app, default_limits=[])
 NOTIFY_RECIPIENTS = ["fkyei4life@gmail.com", "kyeikofi@gmail.com"]
 
 
-def notify(subject, body):
-    """Fire-and-forget email so registration/loan requests never wait on SMTP."""
+def send_email_async(subject, recipients, body):
+    """Fire-and-forget email so requests never wait on SMTP."""
     if not app.config["MAIL_USERNAME"] or not app.config["MAIL_PASSWORD"]:
         app.logger.warning("MAIL_USERNAME/MAIL_PASSWORD not set; skipping email: %s", subject)
         return
@@ -71,11 +80,15 @@ def notify(subject, body):
     def _send():
         with app.app_context():
             try:
-                mail.send(Message(subject=subject, recipients=NOTIFY_RECIPIENTS, body=body))
+                mail.send(Message(subject=subject, recipients=recipients, body=body))
             except Exception:
-                app.logger.exception("Failed to send notification email: %s", subject)
+                app.logger.exception("Failed to send email: %s", subject)
 
     threading.Thread(target=_send, daemon=True).start()
+
+
+def notify(subject, body):
+    send_email_async(subject, NOTIFY_RECIPIENTS, body)
 
 
 @login_manager.user_loader
@@ -137,6 +150,8 @@ def register():
             phone=form.phone.data.strip(),
             program=form.program.data.strip(),
             room_number=form.room_number.data.strip(),
+            check_in_date=form.check_in_date.data,
+            check_out_date=form.check_out_date.data,
             role="admin" if is_admin_signup else "student",
         )
         user.set_password(form.password.data)
@@ -161,6 +176,8 @@ def register():
                 f"Phone: {user.phone}\n"
                 f"Program: {user.program}\n"
                 f"Room Number: {user.room_number or 'Not specified'}\n"
+                f"Check-in: {user.check_in_date.strftime('%d %b %Y')}\n"
+                f"Check-out: {user.check_out_date.strftime('%d %b %Y')}\n"
                 f"Registered On: {user.date_registered.strftime('%d %b %Y, %I:%M %p')}\n"
                 f"Beds Occupied Now: {occupied_beds + 1} / {TOTAL_BEDS}\n",
             )
@@ -185,6 +202,55 @@ def login():
             return redirect(url_for("admin_dashboard") if user.is_admin else url_for("dashboard"))
         flash("Invalid email or password.", "danger")
     return render_template("login.html", form=form)
+
+
+def _reset_serializer():
+    return URLSafeTimedSerializer(app.config["SECRET_KEY"])
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+@limiter.limit("5 per hour", methods=["POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data.lower().strip()
+        user = User.query.filter_by(email=email).first()
+        if user:
+            token = _reset_serializer().dumps(email, salt="password-reset")
+            reset_url = url_for("reset_password", token=token, _external=True)
+            send_email_async(
+                "Reset Your Password - Olive Gate Hostel",
+                [user.email],
+                "We received a request to reset your Olive Gate Hostel password.\n\n"
+                f"Click this link to set a new password (valid for 1 hour):\n{reset_url}\n\n"
+                "If you didn't request this, you can safely ignore this email.",
+            )
+        flash("If that email is registered, a password reset link has been sent to it.", "info")
+        return redirect(url_for("login"))
+    return render_template("forgot_password.html", form=form)
+
+
+@app.route("/reset-password/<token>", methods=["GET", "POST"])
+@limiter.limit("10 per hour", methods=["POST"])
+def reset_password(token):
+    try:
+        email = _reset_serializer().loads(token, salt="password-reset", max_age=3600)
+    except (BadSignature, SignatureExpired):
+        flash("This password reset link is invalid or has expired.", "danger")
+        return redirect(url_for("forgot_password"))
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash("This password reset link is invalid.", "danger")
+        return redirect(url_for("forgot_password"))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.new_password.data)
+        db.session.commit()
+        flash("Your password has been reset. Please log in.", "success")
+        return redirect(url_for("login"))
+    return render_template("reset_password.html", form=form)
 
 
 @app.route("/admin-login", methods=["GET", "POST"])
@@ -229,6 +295,10 @@ def _has_active_loan(user):
     return Loan.query.filter(Loan.student_id == user.id, Loan.status.in_(ACTIVE_LOAN_STATUSES)).first()
 
 
+def _latest_payment(user):
+    return Payment.query.filter_by(student_id=user.id).order_by(Payment.date_submitted.desc()).first()
+
+
 @app.route("/dashboard")
 @login_required
 def dashboard():
@@ -242,6 +312,9 @@ def dashboard():
         rate_pct=int(LOAN_INTEREST_RATE * 100),
         has_active_loan=bool(_has_active_loan(current_user)),
         repayment_days=REPAYMENT_PERIOD_DAYS,
+        latest_payment=_latest_payment(current_user),
+        checkout_amount=CHECKOUT_PAYMENT_AMOUNT,
+        payment_number=PAYMENT_MOMO_NUMBER,
     )
 
 
@@ -283,6 +356,40 @@ def apply_loan():
         max_amount=MAX_LOAN_AMOUNT,
         rate_pct=int(LOAN_INTEREST_RATE * 100),
         repayment_days=REPAYMENT_PERIOD_DAYS,
+    )
+
+
+@app.route("/payment/submit", methods=["GET", "POST"])
+@login_required
+def submit_payment():
+    if current_user.is_admin:
+        abort(403)
+    latest = _latest_payment(current_user)
+    if latest and latest.status in PAYMENT_ACTIVE_STATUSES:
+        flash("You already have a payment submission on record.", "info")
+        return redirect(url_for("dashboard"))
+    form = PaymentForm()
+    if form.validate_on_submit():
+        payment = Payment(
+            student_id=current_user.id,
+            amount=CHECKOUT_PAYMENT_AMOUNT,
+            transaction_reference=form.transaction_reference.data.strip(),
+        )
+        db.session.add(payment)
+        db.session.commit()
+        notify(
+            "New Checkout Payment Submitted - Olive Gate Hostel",
+            "A student has submitted a checkout payment for review.\n\n"
+            f"Student: {current_user.full_name}\n"
+            f"Email: {current_user.email}\n"
+            f"Amount: GHc {payment.amount:.2f}\n"
+            f"Transaction Reference: {payment.transaction_reference}\n"
+            f"Submitted On: {payment.date_submitted.strftime('%d %b %Y, %I:%M %p')}\n",
+        )
+        flash("Payment confirmation submitted. The admin will verify and approve it.", "success")
+        return redirect(url_for("dashboard"))
+    return render_template(
+        "submit_payment.html", form=form, amount=CHECKOUT_PAYMENT_AMOUNT, payment_number=PAYMENT_MOMO_NUMBER
     )
 
 
@@ -338,6 +445,9 @@ def admin_dashboard():
     outstanding_balance = sum(loan.total_repayable for loan in all_loans if loan.status == "approved")
     occupied_beds, beds_available = _bed_stats()
 
+    payments = Payment.query.order_by(Payment.date_submitted.desc()).all()
+    pending_payments_count = sum(1 for p in payments if p.status == "pending")
+
     return render_template(
         "admin_dashboard.html",
         students=students,
@@ -351,6 +461,8 @@ def admin_dashboard():
         occupied_beds=occupied_beds,
         beds_available=beds_available,
         total_beds=TOTAL_BEDS,
+        payments=payments,
+        pending_payments_count=pending_payments_count,
     )
 
 
@@ -371,6 +483,20 @@ def decide_loan(loan_id, action):
     return redirect(url_for("admin_dashboard"))
 
 
+@app.route("/admin/payments/<int:payment_id>/<action>", methods=["POST"])
+@login_required
+@admin_required
+def decide_payment(payment_id, action):
+    if action not in ("approve", "reject"):
+        abort(400)
+    payment = Payment.query.get_or_404(payment_id)
+    payment.status = "approved" if action == "approve" else "rejected"
+    payment.date_decided = datetime.utcnow()
+    db.session.commit()
+    flash(f"Payment #{payment.id} marked as {payment.status}.", "success")
+    return redirect(url_for("admin_dashboard"))
+
+
 @app.route("/admin/students/<int:student_id>/edit", methods=["GET", "POST"])
 @login_required
 @admin_required
@@ -388,6 +514,8 @@ def edit_student(student_id):
             student.phone = form.phone.data.strip()
             student.program = form.program.data.strip()
             student.room_number = form.room_number.data.strip()
+            student.check_in_date = form.check_in_date.data
+            student.check_out_date = form.check_out_date.data
             if form.new_password.data:
                 student.set_password(form.new_password.data)
             db.session.commit()
@@ -414,7 +542,9 @@ def export_students_csv():
     students = User.query.filter_by(role="student").order_by(User.date_registered.desc()).all()
     buffer = io.StringIO()
     writer = csv.writer(buffer)
-    writer.writerow(["Full Name", "Email", "Phone", "Program", "Room Number", "Registered On"])
+    writer.writerow(
+        ["Full Name", "Email", "Phone", "Program", "Room Number", "Check-in", "Check-out", "Registered On"]
+    )
     for student in students:
         writer.writerow(
             [
@@ -423,6 +553,8 @@ def export_students_csv():
                 student.phone,
                 student.program,
                 student.room_number or "",
+                student.check_in_date.strftime("%Y-%m-%d") if student.check_in_date else "",
+                student.check_out_date.strftime("%Y-%m-%d") if student.check_out_date else "",
                 student.date_registered.strftime("%Y-%m-%d"),
             ]
         )
@@ -493,8 +625,30 @@ def seed_admin():
     db.session.commit()
 
 
+def run_lightweight_migrations():
+    """Add newly-introduced columns to a pre-existing 'user' table.
+
+    db.create_all() only creates missing tables; it never alters an
+    existing table's columns, so new User fields need to be patched in
+    by hand on databases that predate them.
+    """
+    inspector = inspect(db.engine)
+    if "user" not in inspector.get_table_names():
+        return
+    existing_columns = {col["name"] for col in inspector.get_columns("user")}
+    missing = [
+        name for name in ("check_in_date", "check_out_date") if name not in existing_columns
+    ]
+    if not missing:
+        return
+    with db.engine.begin() as conn:
+        for name in missing:
+            conn.execute(text(f'ALTER TABLE "user" ADD COLUMN {name} DATE'))
+
+
 with app.app_context():
     db.create_all()
+    run_lightweight_migrations()
     seed_admin()
 
 if __name__ == "__main__":

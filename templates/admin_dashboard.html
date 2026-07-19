@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Admin Dashboard - Olive Gate Hostel{% endblock %}
 {% block content %}
+<div class="promo-banner mb-4">
+  <div><i class="bi bi-cash-stack"></i> <strong>Earn Income as a Student</strong> &mdash; check out this opportunity for students.</div>
+  <a href="https://chinacarsinghana.com/sales/register" target="_blank" rel="noopener noreferrer" class="btn btn-sm">Learn More</a>
+</div>
+
 <h3 class="mb-4">Admin Dashboard</h3>
 
 <div class="row g-3 mb-4">
@@ -18,8 +23,16 @@
   <div class="col-6 col-md-3">
     <div class="card shadow-sm">
       <div class="card-body">
-        <h6 class="text-muted">Pending Review</h6>
+        <h6 class="text-muted">Pending Loans</h6>
         <p class="fs-4 mb-0">{{ pending_count }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6 class="text-muted">Pending Payments</h6>
+        <p class="fs-4 mb-0">{{ pending_payments_count }}</p>
       </div>
     </div>
   </div>
@@ -34,7 +47,7 @@
   <div class="col-6 col-md-3">
     <div class="card shadow-sm">
       <div class="card-body">
-        <h6 class="text-muted">Outstanding Balance (GHc)</h6>
+        <h6 class="text-muted">Outstanding Loan Balance (GHc)</h6>
         <p class="fs-4 mb-0">{{ '%.2f'|format(outstanding_balance) }}</p>
       </div>
     </div>
@@ -117,6 +130,51 @@
 <p class="text-muted mb-5">No loan applications match this filter.</p>
 {% endif %}
 
+<h4 class="mb-3">Checkout Payments</h4>
+{% if payments %}
+<div class="table-responsive mb-5">
+  <table class="table table-striped align-middle">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Student</th>
+        <th>Amount (GHc)</th>
+        <th>Transaction Reference</th>
+        <th>Status</th>
+        <th>Submitted On</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for payment in payments %}
+      <tr>
+        <td>{{ payment.id }}</td>
+        <td>{{ payment.student.full_name }}</td>
+        <td>{{ '%.2f'|format(payment.amount) }}</td>
+        <td>{{ payment.transaction_reference }}</td>
+        <td><span class="badge status-{{ payment.status }}">{{ payment.status|capitalize }}</span></td>
+        <td>{{ payment.date_submitted.strftime('%d %b %Y') }}</td>
+        <td>
+          {% if payment.status == 'pending' %}
+            <form method="POST" action="{{ url_for('decide_payment', payment_id=payment.id, action='approve') }}" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-success">Approve</button>
+            </form>
+            <form method="POST" action="{{ url_for('decide_payment', payment_id=payment.id, action='reject') }}" class="d-inline">
+              <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+            </form>
+          {% else %}
+            <span class="text-muted">&mdash;</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="text-muted mb-5">No checkout payments submitted yet.</p>
+{% endif %}
+
 <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <h4 class="mb-0">Registered Students</h4>
   <form method="GET" class="d-flex gap-2">
@@ -136,6 +194,8 @@
         <th>Phone</th>
         <th>Program</th>
         <th>Room</th>
+        <th>Check-in</th>
+        <th>Check-out</th>
         <th>Registered On</th>
         <th>Actions</th>
       </tr>
@@ -148,6 +208,8 @@
         <td>{{ student.phone }}</td>
         <td>{{ student.program }}</td>
         <td>{{ student.room_number or '-' }}</td>
+        <td>{{ student.check_in_date.strftime('%d %b %Y') if student.check_in_date else '-' }}</td>
+        <td>{{ student.check_out_date.strftime('%d %b %Y') if student.check_out_date else '-' }}</td>
         <td>{{ student.date_registered.strftime('%d %b %Y') }}</td>
         <td>
           <a href="{{ url_for('edit_student', student_id=student.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
