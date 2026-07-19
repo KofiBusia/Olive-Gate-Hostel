@@ -26,6 +26,13 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Login")
 
 
+class AdminAccessForm(FlaskForm):
+    full_name = StringField("Full Name", validators=[DataRequired(), Length(max=120)])
+    email = StringField("Email", validators=[DataRequired(), Email(), Length(max=120)])
+    admin_password = PasswordField("Admin Password", validators=[DataRequired()])
+    submit = SubmitField("Enter Admin Dashboard")
+
+
 class LoanForm(FlaskForm):
     amount = FloatField(
         "Loan Amount (GHc)",

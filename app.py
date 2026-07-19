@@ -13,6 +13,7 @@ from flask_mail import Mail, Message
 
 from extensions import db
 from forms import (
+    AdminAccessForm,
     AdminStudentEditForm,
     ChangePasswordForm,
     LoanForm,
@@ -184,6 +185,36 @@ def login():
             return redirect(url_for("admin_dashboard") if user.is_admin else url_for("dashboard"))
         flash("Invalid email or password.", "danger")
     return render_template("login.html", form=form)
+
+
+@app.route("/admin-login", methods=["GET", "POST"])
+@limiter.limit("8 per minute", methods=["POST"])
+def admin_login():
+    if current_user.is_authenticated:
+        return redirect(url_for("admin_dashboard") if current_user.is_admin else url_for("dashboard"))
+    form = AdminAccessForm()
+    access_code = os.environ.get("ADMIN_ACCESS_CODE")
+    if form.validate_on_submit():
+        if not access_code:
+            flash("Admin access isn't configured yet. Contact the site owner.", "danger")
+        elif form.admin_password.data != access_code:
+            flash("Incorrect admin password.", "danger")
+        else:
+            email = form.email.data.lower().strip()
+            user = User.query.filter_by(email=email).first()
+            if user:
+                if not user.is_admin:
+                    user.role = "admin"
+                    db.session.commit()
+            else:
+                user = User(full_name=form.full_name.data.strip(), email=email, role="admin")
+                user.set_password(access_code)
+                db.session.add(user)
+                db.session.commit()
+            login_user(user)
+            flash(f"Welcome, {user.full_name.split()[0]}! You're logged in as admin.", "success")
+            return redirect(url_for("admin_dashboard"))
+    return render_template("admin_login.html", form=form)
 
 
 @app.route("/logout")
