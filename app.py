@@ -24,7 +24,13 @@ from models import ACTIVE_LOAN_STATUSES, LOAN_INTEREST_RATE, MAX_LOAN_AMOUNT, RE
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///olive_gate.db")
+
+database_url = os.environ.get("DATABASE_URL", "sqlite:///olive_gate.db")
+if database_url.startswith("postgres://"):
+    # Render (and some other providers) hand out the legacy "postgres://" scheme,
+    # but SQLAlchemy 1.4+ requires "postgresql://".
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 app.config["MAIL_SERVER"] = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
